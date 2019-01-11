@@ -1,7 +1,5 @@
 navigator.requestMIDIAccess()
   .then((midi) => {
-    console.log(`${midi.inputs.size} MIDI devices connected!`);
-
     const handleMsg = msg => {
       const [cmd, note, velocity] = msg.data;
 
@@ -20,6 +18,8 @@ navigator.requestMIDIAccess()
     for (const input of midi.inputs.values()) {
       input.onmidimessage = handleMsg;
     }
+
+    midi.onstatechange = () => console.log(`${midi.inputs.size} MIDI device(s) connected`);
   }, () => {
     console.log('Failed to access MIDI');
   });
