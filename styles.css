@@ -1,0 +1,175 @@
+/* control left margin */
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+body {
+  margin: 1vw;
+  background-color: hsl(302, 10%, 99%);
+  font-family: Helvetica, sans-serif;
+  font-size: 3.25vw;
+  color: hsl(302, 10%, 99%);
+  overflow: hidden;
+}
+
+/* 16:9 */
+main {
+  width: 98vw; /* 100 - (body margin * 2) */
+  height: 54.25vw; /* 56.25 - (body margin * 2) */
+}
+
+button {
+  border: none;
+  color: hsl(302, 10%, 99%);
+  background-color: hsl(0, 0%, 75%);
+  border-radius: 1.5vw;
+  font-size: 1em;
+  background-size: 6vw;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 0%; /* force iOS button width */
+}
+
+.sidebar {
+  float: left;
+  width: 15vw;
+  font-size: 5vw;
+}
+
+.sidebar button {
+  width: 14.5vw;
+  height: 13.1875vw; /* (54.25 - 0.5 * 3) / 4 */
+  border-radius: 0;
+  margin-top: .5vw;
+}
+
+button.on {
+  background-color: hsl(196, 100%, 47%);
+}
+
+button:active {
+  background-color: hsl(196, 100%, 37%);
+}
+
+.sidebar button:first-child {
+  border-radius: 1.5vw 1.5vw 0 0;
+  margin-top: 0;
+}
+
+.sidebar button:last-child {
+  border-radius: 0 0 1.5vw 1.5vw;
+  border-bottom: none;
+}
+
+#settingsPanel {
+  /* for brackets debugging */
+}
+
+#ampSliders {
+  background-color: hsl(302, 58%, 36%);
+  border-bottom-right-radius: 0;
+  float: left;
+}
+
+#cutoffSliders {
+  background-color: hsl(324, 100%, 46%);
+  border-radius: 1.5vw 1.5vw 0 0;
+}
+
+#etcSliders {
+  background-color: hsl(340, 86%, 50%);
+  border-bottom-left-radius: 0;
+  float: right;
+}
+
+.sliderPanel {
+  width: 27.6667vw;
+  height: 54.25vw;
+  display: inline-block;
+  padding: 1vw 3vw;
+  border-radius: 1.5vw;
+}
+
+.sliderPanel > div {
+  height: 9.75vw;
+}
+
+.sliderPanel > div:first-child {
+  height: 5vw;
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    background-color: hsl(0, 0%, 75%);
+    width: 21.25vw;
+    height: 2.2vw;
+    border-radius: 1vw;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background-color: hsl(302, 10%, 99%);
+    border: none;
+    border-radius: 2vw;
+    width: 4vw;
+    height: 4vw;
+}
+
+input:focus {
+  outline: none;
+}
+
+.gray {
+  color: hsl(0, 0%, 75%);
+}
+
+.name {
+  float: left;
+}
+
+.value {
+  float: right;
+}
+
+#waveformMenu button {
+  height: 10.5vw;
+}
+
+button.settings {
+  background-image:url('./img/gear.svg');
+}
+
+#sineButton {
+  background-image: url('./img/sineWave.svg');
+}
+
+#squareButton {
+  background-image: url('./img/squareWave.svg');
+}
+
+#triangleButton {
+  background-image: url('./img/triangleWave.svg');
+}
+
+#sawtoothButton {
+  background-image: url('./img/sawWave.svg');
+}
+
+.hidden {
+  display: none;
+}
+
+#panic {
+  position: relative;
+  transform: translate(-50%, -50%);
+  left: 50%;
+  top: 50%;
+  padding: 1vw;
+}
