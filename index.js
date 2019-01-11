@@ -1,11 +1,18 @@
 const audioCtx = new AudioContext();
-const synth = new Monosynth(audioCtx);
+const synth = new Polysynth(audioCtx);
 
 // Click anywhere in the page to enable sound.
 document.onclick = () => {
   audioCtx.resume();
   document.onclick = undefined;
 };
+
+// Last-note priority with 16 voices.
+let voiceIndex = -1;
+const nextVoice = () => {
+  voiceIndex = voiceIndex === 15 ? 0 : voiceIndex + 1;
+  return voiceIndex;
+}
 
 navigator.requestMIDIAccess()
   .then((midi) => {
@@ -25,10 +32,14 @@ navigator.requestMIDIAccess()
 
       // Play the notes!
       if (command === 'ON') {
-        synth.pitch(frequency(note));
-        synth.start();
+        const voiceIndex = nextVoice();
+        const voice = synth.voices[voiceIndex];
+        voice.pitch(frequency(note));
+        voice.start();
       } else {
-        synth.stop();
+        synth.voices
+          .filter(v => round(v.pitch()) === round(frequency(note)))
+          .forEach(v => v.stop());
       }
     };
 
