@@ -184,6 +184,7 @@ const panic = () => {
           cmd >= 128 && cmd < 144 ? 'off'
           : cmd >= 144 && cmd < 160 ? 'on'
           : cmd >= 224 && cmd < 240 ? 'pitch'
+          : cmd >= 176 && cmd < 192 ? 'ctrl'
           : 'unknown';
 
         const exec = {
@@ -212,6 +213,11 @@ const panic = () => {
 
             synth.voices.forEach(v => v.pitch(frequency(v.note) * multiplier));
             console.log(synth.voices[0].pitch());
+          },
+          ctrl() {
+            // Controllers such as mod wheel, aftertouch, breath add vibrato.
+            const [, , strength] = msg.data;
+            synth.lfo.depth(normalize(strength) * 10);
           },
           unknown() {
             console.log(msg.data);
