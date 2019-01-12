@@ -1,5 +1,8 @@
 let settings, synth;
 
+const scale = (num, inMin, inMax, outMin, outMax) =>
+  (num - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
+
 const waveforms = ['sine', 'square', 'triangle', 'sawtooth'];
 
 const saveSettings = (newSettings) => {
@@ -172,29 +175,50 @@ const panic = () => {
   navigator.requestMIDIAccess()
     .then((midi) => {
       const handleMsg = (msg) => {
-        const [cmd, note, velocity] = msg.data;
+        const [cmd] = msg.data;
         const round = val => val.toFixed(2);
         const frequency = note => Math.pow(2, (note - 69) / 12) * 440;
-        const loudness = velocity => (velocity / 127) * 100;
+        const normalize = val => val / 127;
+        // Command range represents 16 channels
         const command =
-          cmd >= 128 && cmd < 144 ? 'OFF' // Channel is cmd - 128
-          : cmd >= 144 && cmd < 160 ? 'ON' // Channel is cmd - 144
-          : 'UNKNOWN';
+          cmd >= 128 && cmd < 144 ? 'off'
+          : cmd >= 144 && cmd < 160 ? 'on'
+          : cmd >= 224 && cmd < 240 ? 'pitch'
+          : 'unknown';
 
-        console.log(`${command} ${round(frequency(note))}hz ${round(loudness(velocity))}%`);
+        const exec = {
+          off() {
+            const [, note, velocity] = msg.data;
+            synth.voices
+              .filter(v => v.note === note)
+              .forEach(v => v.stop());
+            console.log(`${command} ${note}`);
+          },
+          on() {
+            const [, note, velocity] = msg.data;
+            console.log(note, velocity);
+            const voiceIndex = nextVoice();
+            const voice = synth.voices[voiceIndex];
+            voice.pitch(frequency(note));
+            voice.note = note;
+            voice.start();
+            console.log(`${command} ${note} ${round(normalize(velocity) * 100)}%`);
+          },
+          pitch() {
+            const bendRange = 2; // In semitones
+            const [, , strength] = msg.data;
+            const mappedStrength = scale(strength, 0, 127, -1, 1) * bendRange / 12;
+            const multiplier = Math.pow(2, mappedStrength);
 
-        // Play the notes!
-        if (command === 'ON') {
-          const voiceIndex = nextVoice();
-          const voice = synth.voices[voiceIndex];
-          voice.pitch(frequency(note));
-          voice.note = note;
-          voice.start();
-        } else {
-          synth.voices
-            .filter(v => v.note === note)
-            .forEach(v => v.stop());
-        }
+            synth.voices.forEach(v => v.pitch(frequency(v.note) * multiplier));
+            console.log(synth.voices[0].pitch());
+          },
+          unknown() {
+            console.log(msg.data);
+          }
+        };
+
+        exec[command]();
       };
 
       for (const input of midi.inputs.values()) {
@@ -260,7 +284,6 @@ const panic = () => {
 
   settings = getSettings();
   synth = new Polysynth(audioCtx, settings);
-  console.log('yor synth!', synth);
 
   // update controls to display initial synth values
   $('#keySlider').val(settings.key); // not a subpoly or submono property
