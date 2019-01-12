@@ -188,10 +188,11 @@ const panic = () => {
           const voiceIndex = nextVoice();
           const voice = synth.voices[voiceIndex];
           voice.pitch(frequency(note));
+          voice.note = note;
           voice.start();
         } else {
           synth.voices
-            .filter(v => round(v.pitch()) === round(frequency(note)))
+            .filter(v => v.note === note)
             .forEach(v => v.stop());
         }
       };
