@@ -93,33 +93,10 @@ const cutoff = {
   }
 };
 
-const setKey = (newKey) => {
-  settings.key = newKey = Number(newKey);
-
-  // TODO: "Key" can just be a note shift (+1, +2, etc.).
-  const getKeyLabel = () => {
-    const keys = [
-      { label: 'G', value: 35 },
-      { label: 'G#', value: 36 },
-      { label: 'A', value: 37 },
-      { label: 'A#', value: 38 },
-      { label: 'B', value: 39 },
-      { label: 'C', value: 40 },
-      { label: 'C#', value: 41 },
-      { label: 'D', value: 42 },
-      { label: 'D#', value: 43 },
-      { label: 'E', value: 44 },
-      { label: 'F', value: 45 },
-      { label: 'F#', value: 46 }
-    ];
-    const key = keys.find(k => k.value === newKey);
-
-    return key.label;
-  };
-
-  const keyText = getKeyLabel();
-  $('#keyLabel').text(keyText);
-  saveSettings({key: newKey});
+const setBendRange = (newBendRange) => {
+  settings.bendRange = newBendRange = Number(newBendRange);
+  $('#bendLabel').text(newBendRange);
+  saveSettings({bendRange: newBendRange});
 };
 
 // TODO: Make this work.
@@ -207,9 +184,8 @@ const panic = () => {
             console.log(`${command} ${note} ${round(normalize(velocity) * 100)}%`);
           },
           pitch() {
-            const bendRange = 2; // In semitones
             const [, , strength] = msg.data;
-            const mappedStrength = scale(strength, 0, 127, -1, 1) * bendRange / 12;
+            const mappedStrength = scale(strength, 0, 127, -1, 1) * settings.bendRange / 12;
             const multiplier = Math.pow(2, mappedStrength);
 
             synth.voices.forEach(v => v.pitch(frequency(v.note) * multiplier));
@@ -267,7 +243,7 @@ const panic = () => {
     if (!settings) {
       // load and save defaults
       settings = {
-        key: 40, // C
+        bendRange: 2, // In semitones
         octave: 0,
         waveform: 'sawtooth',
         volume: 0.9,
@@ -293,7 +269,7 @@ const panic = () => {
   synth = new Polysynth(audioCtx, settings);
 
   // update controls to display initial synth values
-  $('#keySlider').val(settings.key); // not a subpoly or submono property
+  $('#bendSlider').val(settings.bendRange); // not a subpoly or submono property
   $('#octaveSlider').val(settings.octave); // not a subpoly or submono property
   $('#widthSlider').val(synth.width());
 
