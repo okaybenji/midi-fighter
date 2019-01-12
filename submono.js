@@ -35,7 +35,7 @@ var Monosynth = function Monosynth(audioCtx, config) {
     synth.lfo.frequency(config.lfo.frequency || 6);
 
     // primary oscillator
-    synth.amp.gain.value = 0;
+    synth.amp.gain.setValueAtTime(0, 0);
     synth.filter.type = 'lowpass';
     synth.filter.connect(synth.amp);
     synth.amp.connect(audioCtx.destination);
