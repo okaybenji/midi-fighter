@@ -191,17 +191,18 @@ const panic = () => {
           off() {
             const [, note, velocity] = msg.data;
             synth.voices
-              .filter(v => v.note === note)
+              .filter(v => v.note === note + (settings.octave * 12))
               .forEach(v => v.stop());
             console.log(`${command} ${note}`);
           },
           on() {
             const [, note, velocity] = msg.data;
+            const octave = settings.octave * 12;
             console.log(note, velocity);
             const voiceIndex = nextVoice();
             const voice = synth.voices[voiceIndex];
-            voice.pitch(frequency(note));
-            voice.note = note;
+            voice.pitch(frequency(note + octave));
+            voice.note = note + octave;
             voice.start();
             console.log(`${command} ${note} ${round(normalize(velocity) * 100)}%`);
           },
@@ -267,7 +268,7 @@ const panic = () => {
       // load and save defaults
       settings = {
         key: 40, // C
-        octave: -1,
+        octave: 0,
         waveform: 'sawtooth',
         volume: 0.9,
         numVoices: 16,
