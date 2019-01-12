@@ -173,15 +173,13 @@ const panic = () => {
     .then((midi) => {
       const handleMsg = (msg) => {
         const [cmd, note, velocity] = msg.data;
-
         const round = val => val.toFixed(2);
         const frequency = note => Math.pow(2, (note - 69) / 12) * 440;
         const loudness = velocity => (velocity / 127) * 100;
-        const cmds = {
-         '128': 'OFF',
-         '144': 'ON',
-        };
-        const command = cmds[cmd] === 'ON' && velocity === 0 ? 'OFF' : cmds[cmd];
+        const command =
+          cmd >= 128 && cmd < 144 ? 'OFF' // Channel is cmd - 128
+          : cmd >= 144 && cmd < 160 ? 'ON' // Channel is cmd - 144
+          : 'UNKNOWN';
 
         console.log(`${command} ${round(frequency(note))}hz ${round(loudness(velocity))}%`);
 
