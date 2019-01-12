@@ -188,7 +188,7 @@ const panic = () => {
             const mappedStrength = scale(strength, 0, 127, -1, 1) * settings.bendRange / 12;
             const multiplier = Math.pow(2, mappedStrength);
 
-            synth.voices.forEach(v => v.pitch(frequency(v.note) * multiplier));
+            synth.voices.forEach(v => v.note && v.pitch(frequency(v.note) * multiplier));
             console.log(synth.voices[0].pitch());
           },
           ctrl() {
