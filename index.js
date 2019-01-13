@@ -66,7 +66,7 @@ const cutoff = {
   setMaxFrequency(newMaxFrequency) {
     newMaxFrequency = Number(newMaxFrequency);
     synth.cutoff.maxFrequency(newMaxFrequency);
-    const maxFrequencyText = newMaxFrequency;
+    const maxFrequencyText = Math.round(newMaxFrequency);
     $('#cutoffMaxFrequencyLabel').text(maxFrequencyText);
     saveSettings({cutoff: {maxFrequency: newMaxFrequency}});
   },
@@ -149,70 +149,75 @@ const panic = () => {
     return voiceIndex;
   }
 
-  navigator.requestMIDIAccess()
-    .then((midi) => {
-      const handleMsg = (msg) => {
-        const [cmd, , val] = msg.data;
-        const round = val => val.toFixed(2);
-        const frequency = note => Math.pow(2, (note - 69) / 12) * 440;
-        const normalize = val => val / 127;
-        // Command range represents 16 channels
-        const command =
-          cmd >= 128 && cmd < 144 ? 'off'
-          : cmd >= 144 && cmd < 160 && val === 0 ? 'off'
-          : cmd >= 144 && cmd < 160 ? 'on'
-          : cmd >= 224 && cmd < 240 ? 'pitch'
-          : cmd >= 176 && cmd < 192 ? 'ctrl'
-          : 'unknown';
+  if (typeof navigator.requestMIDIAccess === 'function') {
+    navigator.requestMIDIAccess()
+      .then((midi) => {
+        const handleMsg = (msg) => {
+          const [cmd, , val] = msg.data;
+          const round = val => val.toFixed(2);
+          const frequency = note => Math.pow(2, (note - 69) / 12) * 440;
+          const normalize = val => val / 127;
+          // Command range represents 16 channels
+          const command =
+            cmd >= 128 && cmd < 144 ? 'off'
+            : cmd >= 144 && cmd < 160 && val === 0 ? 'off'
+            : cmd >= 144 && cmd < 160 ? 'on'
+            : cmd >= 224 && cmd < 240 ? 'pitch'
+            : cmd >= 176 && cmd < 192 ? 'ctrl'
+            : 'unknown';
 
-        const exec = {
-          off() {
-            const [, note, velocity] = msg.data;
-            synth.voices
-              .filter(v => v.note === note + (settings.octave * 12))
-              .forEach(v => v.stop());
-            console.log(`${command} ${note}`);
-          },
-          on() {
-            const [, note, velocity] = msg.data;
-            const octave = settings.octave * 12;
-            console.log(note, velocity);
-            const voiceIndex = nextVoice();
-            const voice = synth.voices[voiceIndex];
-            voice.pitch(frequency(note + octave));
-            voice.note = note + octave;
-            voice.start();
-            console.log(`${command} ${note} ${round(normalize(velocity) * 100)}%`);
-          },
-          pitch() {
-            const [, , strength] = msg.data;
-            const mappedStrength = scale(strength, 0, 127, -1, 1) * settings.bendRange / 12;
-            const multiplier = Math.pow(2, mappedStrength);
+          const exec = {
+            off() {
+              const [, note, velocity] = msg.data;
+              synth.voices
+                .filter(v => v.note === note + (settings.octave * 12))
+                .forEach(v => v.stop());
+              console.log(`${command} ${note}`);
+            },
+            on() {
+              const [, note, velocity] = msg.data;
+              const octave = settings.octave * 12;
+              console.log(note, velocity);
+              const voiceIndex = nextVoice();
+              const voice = synth.voices[voiceIndex];
+              voice.pitch(frequency(note + octave));
+              voice.note = note + octave;
+              voice.start();
+              console.log(`${command} ${note} ${round(normalize(velocity) * 100)}%`);
+            },
+            pitch() {
+              const [, , strength] = msg.data;
+              const mappedStrength = scale(strength, 0, 127, -1, 1) * settings.bendRange / 12;
+              const multiplier = Math.pow(2, mappedStrength);
 
-            synth.voices.forEach(v => v.note && v.pitch(frequency(v.note) * multiplier));
-            console.log(synth.voices[0].pitch());
-          },
-          ctrl() {
-            // Controllers such as mod wheel, aftertouch, breath add vibrato.
-            const [, , strength] = msg.data;
-            synth.lfo.depth(normalize(strength) * 10);
-          },
-          unknown() {
-            //console.log(msg.data);
-          }
+              synth.voices.forEach(v => v.note && v.pitch(frequency(v.note) * multiplier));
+              console.log(synth.voices[0].pitch());
+            },
+            ctrl() {
+              // Controllers such as mod wheel, aftertouch, breath add vibrato.
+              const [, , strength] = msg.data;
+              synth.lfo.depth(normalize(strength) * 10);
+              cutoff.setMaxFrequency(7500 + normalize(strength) * 10000);
+            },
+            unknown() {
+              //console.log(msg.data);
+            }
+          };
+
+          exec[command]();
         };
 
-        exec[command]();
-      };
+        for (const input of midi.inputs.values()) {
+          input.onmidimessage = handleMsg;
+        }
 
-      for (const input of midi.inputs.values()) {
-        input.onmidimessage = handleMsg;
-      }
-
-      midi.onstatechange = () => console.log(`${midi.inputs.size} MIDI device(s) connected`);
-    }, () => {
-      console.log('Failed to access MIDI');
-    });
+        midi.onstatechange = () => console.log(`${midi.inputs.size} MIDI device(s) connected`);
+      }, () => {
+        console.log('Failed to access MIDI');
+      });
+  } else {
+    console.log('Your browser does not support the Web MIDI API');
+  }
 
   // enable sound on mobile systems like iOS; code from Howler.js
   (() => {
